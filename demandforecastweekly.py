@@ -92,14 +92,14 @@ def demand_app():
    
      
     # Load the pre-trained models and scaler
-    @st.cache_data
-    def load_model_data():
-        with open('best_model.pkl', 'rb') as file:
-            best_model = pickle.load(file)
-        with open('scaler.pkl', 'rb') as file:
-            scaler = pickle.load(file)
-        data = pd.read_csv('Sales_invoices.csv')
-        return best_model, scaler, data
+    # @st.cache_data
+    # def load_model_data():
+    #     with open('best_model.pkl', 'rb') as file:
+    #         best_model = pickle.load(file)
+    #     with open('scaler.pkl', 'rb') as file:
+    #         scaler = pickle.load(file)
+    #     data = pd.read_csv('Sales_invoices.csv')
+    #     return best_model, scaler, data
 
 
     def forecast_arima(data, forecast_period):
@@ -756,57 +756,57 @@ def demand_app():
             st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
             
-        elif forecast_model == 'Pre-trained Model':
+        # elif forecast_model == 'Pre-trained Model':
                 
-        # Prepare features for forecasting
-            group_data['Week No.'] = group_data['Week'].dt.month
-            group_data['Year'] = group_data['Week'].dt.year
+        # # Prepare features for forecasting
+        #     group_data['Week No.'] = group_data['Week'].dt.month
+        #     group_data['Year'] = group_data['Week'].dt.year
 
-            X = group_data[['Week No.', 'Year', 'Value', 'Quantity']]
-            X_scaled = scaler.transform(X)
+        #     X = group_data[['Week No.', 'Year', 'Value', 'Quantity']]
+        #     X_scaled = scaler.transform(X)
 
-            # Predict using the pre-trained model
-            forecast_sales_values = best_model.predict(X_scaled)
-            forecast_quantity_values = best_model.predict(X_scaled)
+        #     # Predict using the pre-trained model
+        #     forecast_sales_values = best_model.predict(X_scaled)
+        #     forecast_quantity_values = best_model.predict(X_scaled)
 
-            # Generate future dates
-            future_dates = pd.date_range(start=group_data['Week'].max(), periods=forecast_period+1, freq='W')[1:]
+        #     # Generate future dates
+        #     future_dates = pd.date_range(start=group_data['Week'].max(), periods=forecast_period+1, freq='W')[1:]
 
-            forecast_sales = pd.DataFrame({
-                'ds': future_dates,
-                'yhat': forecast_sales_values[-forecast_period:]
-            })
+        #     forecast_sales = pd.DataFrame({
+        #         'ds': future_dates,
+        #         'yhat': forecast_sales_values[-forecast_period:]
+        #     })
 
-            forecast_quantity = pd.DataFrame({
-                'ds': future_dates,
-                'yhat': forecast_quantity_values[-forecast_period:]
-            })
+        #     forecast_quantity = pd.DataFrame({
+        #         'ds': future_dates,
+        #         'yhat': forecast_quantity_values[-forecast_period:]
+        #     })
 
-            st.toast('Pre-trained Model forecast successfully generated!')
+        #     st.toast('Pre-trained Model forecast successfully generated!')
 
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.plot(forecast_sales['ds'], forecast_sales['yhat'], label='Forecast')
-            ax.set_title(f'Sales Forecast for {item_description} {"(All Colors)" if product_level else f"({colour_group})"}')
-            ax.set_xlabel('Weeks')
-            ax.set_ylabel('Sales (Ksh)')
-            ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
-            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            plt.legend()
-            st.pyplot(fig)
+        #     fig, ax = plt.subplots(figsize=(10, 6))
+        #     ax.plot(forecast_sales['ds'], forecast_sales['yhat'], label='Forecast')
+        #     ax.set_title(f'Sales Forecast for {item_description} {"(All Colors)" if product_level else f"({colour_group})"}')
+        #     ax.set_xlabel('Weeks')
+        #     ax.set_ylabel('Sales (Ksh)')
+        #     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
+        #     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
+        #     plt.xticks(rotation=45)
+        #     plt.tight_layout()
+        #     plt.legend()
+        #     st.pyplot(fig)
 
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.plot(forecast_quantity['ds'], forecast_quantity['yhat'], label='Forecast')
-            ax.set_title(f'Quantity Forecast for {item_description} {"(All Colors)" if product_level else f"({colour_group})"}')
-            ax.set_xlabel('Weeks')
-            ax.set_ylabel('Quantity')
-            ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
-            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            plt.legend()
-            st.pyplot(fig)
+        #     fig, ax = plt.subplots(figsize=(10, 6))
+        #     ax.plot(forecast_quantity['ds'], forecast_quantity['yhat'], label='Forecast')
+        #     ax.set_title(f'Quantity Forecast for {item_description} {"(All Colors)" if product_level else f"({colour_group})"}')
+        #     ax.set_xlabel('Weeks')
+        #     ax.set_ylabel('Quantity')
+        #     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
+        #     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
+        #     plt.xticks(rotation=45)
+        #     plt.tight_layout()
+        #     plt.legend()
+        #     st.pyplot(fig)
                   
 
     def forecast_overall_sales_and_quantities(weekly_sales, forecast_period, forecast_model):
@@ -1180,98 +1180,100 @@ def demand_app():
             performance.
             """)
 
-        elif forecast_model == 'Pre-trained Model':
+        # elif forecast_model == 'Pre-trained Model':
             
-                # Prepare features for forecasting
-                overall_data['Week No.'] = overall_data['Week'].dt.month
-                overall_data['Year'] = overall_data['Week'].dt.year
+        #         # Prepare features for forecasting
+        #         overall_data['Week No.'] = overall_data['Week'].dt.month
+        #         overall_data['Year'] = overall_data['Week'].dt.year
     
-                X = overall_data[['Week No.', 'Year', 'Value', 'Quantity']]
-                X_scaled = scaler.transform(X)
+        #         X = overall_data[['Week No.', 'Year', 'Value', 'Quantity']]
+        #         X_scaled = scaler.transform(X)
     
-                # Predict using the pre-trained model
-                forecast_sales_values = best_model.predict(X_scaled)
-                forecast_quantity_values = best_model.predict(X_scaled)
+        #         # Predict using the pre-trained model
+        #         forecast_sales_values = best_model.predict(X_scaled)
+        #         forecast_quantity_values = best_model.predict(X_scaled)
     
-                # Generate future dates
-                future_dates = pd.date_range(start=overall_data['Week'].max(), periods=forecast_period+1, freq='W')[1:]
+        #         # Generate future dates
+        #         future_dates = pd.date_range(start=overall_data['Week'].max(), periods=forecast_period+1, freq='W')[1:]
     
-                forecast_sales = pd.DataFrame({
-                    'ds': future_dates,
-                    'yhat': forecast_sales_values[-forecast_period:]
-                })
+        #         forecast_sales = pd.DataFrame({
+        #             'ds': future_dates,
+        #             'yhat': forecast_sales_values[-forecast_period:]
+        #         })
     
-                forecast_quantity = pd.DataFrame({
-                    'ds': future_dates,
-                    'yhat': forecast_quantity_values[-forecast_period:]
-                })
+        #         forecast_quantity = pd.DataFrame({
+        #             'ds': future_dates,
+        #             'yhat': forecast_quantity_values[-forecast_period:]
+        #         })
     
-                st.toast('Pre-trained Model forecast successfully generated!')
+        #         st.toast('Pre-trained Model forecast successfully generated!')
     
-                fig, ax = plt.subplots(figsize=(10, 6))
-                ax.plot(forecast_sales['ds'], forecast_sales['yhat'], label='Forecast')
-                ax.set_title('Overall Sales Forecast (Pre-trained Model)')  
-                ax.set_xlabel('Weeks')
-                ax.set_ylabel('Sales (Ksh)')
-                ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
-                ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
-                plt.xticks(rotation=45)
-                plt.tight_layout()
-                plt.legend()
-                st.pyplot(fig)
+        #         fig, ax = plt.subplots(figsize=(10, 6))
+        #         ax.plot(forecast_sales['ds'], forecast_sales['yhat'], label='Forecast')
+        #         ax.set_title('Overall Sales Forecast (Pre-trained Model)')  
+        #         ax.set_xlabel('Weeks')
+        #         ax.set_ylabel('Sales (Ksh)')
+        #         ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
+        #         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
+        #         plt.xticks(rotation=45)
+        #         plt.tight_layout()
+        #         plt.legend()
+        #         st.pyplot(fig)
     
-                fig, ax = plt.subplots(figsize=(10, 6))
-                ax.plot(forecast_quantity['ds'], forecast_quantity['yhat'], label='Forecast')
-                ax.set_title('Overall Quantity Forecast (Pre-trained Model)')
-                ax.set_xlabel('Weeks')
-                ax.set_ylabel('Quantity')
-                ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
-                ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
-                plt.xticks(rotation=45)
-                plt.tight_layout()
-                plt.legend()
-                st.pyplot(fig)
+        #         fig, ax = plt.subplots(figsize=(10, 6))
+        #         ax.plot(forecast_quantity['ds'], forecast_quantity['yhat'], label='Forecast')
+        #         ax.set_title('Overall Quantity Forecast (Pre-trained Model)')
+        #         ax.set_xlabel('Weeks')
+        #         ax.set_ylabel('Quantity')
+        #         ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%W'))
+        #         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{int(x):,}'))
+        #         plt.xticks(rotation=45)
+        #         plt.tight_layout()
+        #         plt.legend()
+        #         st.pyplot(fig)
 
- # Load and preprocess data
+    # Load and preprocess data
     #csv_path = 'sales_invoices.csv'
     csv_path = st.sidebar.file_uploader("Upload your CSV file", type="csv")
-    df = load_and_preprocess_data(csv_path)
+    if csv_path is not None:
+        df = load_and_preprocess_data(csv_path)
 
-    # Aggregate data by week
-    weekly_sales = aggregate_data(df)
-    st.header('Aggregation to Weekly')
-    st.markdown("""
-            To improve forecasting accuracy, we've aggregated the sales data on a weekly basis. By doing this, we smooth out daily 
-            fluctuations and capture consistent buying patterns that are more relevant to planning and decision-making. Weekly
-            aggregation also allows for better trend identification and seasonality analysis, which are crucial for generating 
-            reliable demand forecasts. This approach ensures we make data-driven predictions that align with real-world sales cycles 
-            and customer behaviors.
-            """)
+        # Aggregate data by week
+        weekly_sales = aggregate_data(df)
+        st.header('Aggregation to Weekly')
+        st.markdown("""
+                To improve forecasting accuracy, we've aggregated the sales data on a weekly basis. By doing this, we smooth out daily 
+                fluctuations and capture consistent buying patterns that are more relevant to planning and decision-making. Weekly
+                aggregation also allows for better trend identification and seasonality analysis, which are crucial for generating 
+                reliable demand forecasts. This approach ensures we make data-driven predictions that align with real-world sales cycles 
+                and customer behaviors.
+                """)
 
-    st.write(weekly_sales)
-    best_model, scaler, data = load_model_data()
+        st.write(weekly_sales)
+        # best_model, scaler, data = load_model_data()
 
-     # Sidebar Widgets
-    st.sidebar.header('Forecast Options')
-    # Date selection widgets
-    
-    
-    classification_options = df['Classification'].unique().tolist()
-    classification = st.sidebar.selectbox('Classification:', classification_options)
+        # Sidebar Widgets
+        st.sidebar.header('Forecast Options')
+        # Date selection widgets
+        
+        
+        classification_options = df['Classification'].unique().tolist()
+        classification = st.sidebar.selectbox('Classification:', classification_options)
 
-    item_description_options = df[df['Classification'] == classification]['Item Description'].unique().tolist()
-    item_description = st.sidebar.selectbox('Item Description:', item_description_options)
+        item_description_options = df[df['Classification'] == classification]['Item Description'].unique().tolist()
+        item_description = st.sidebar.selectbox('Item Description:', item_description_options)
 
-    color_group_options = df[(df['Classification'] == classification) & 
-                            (df['Item Description'] == item_description)]['Colour Group'].unique().tolist()
-    colour_group = st.sidebar.selectbox('Colour Group:', color_group_options)
+        color_group_options = df[(df['Classification'] == classification) & 
+                                (df['Item Description'] == item_description)]['Colour Group'].unique().tolist()
+        colour_group = st.sidebar.selectbox('Colour Group:', color_group_options)
 
-    forecast_period = st.sidebar.slider('Forecast Period (weeks):', min_value=1, max_value=24, value=12)
+        forecast_period = st.sidebar.slider('Forecast Period (weeks):', min_value=1, max_value=24, value=12)
 
-    product_level = st.sidebar.checkbox('Product Level Forecast')
+        product_level = st.sidebar.checkbox('Product Level Forecast')
 
-    forecast_model = st.sidebar.selectbox('Forecast Model:', ['Prophet', 'ARIMA','SARIMAX','Pre-trained Model'])
-
+        forecast_model = st.sidebar.selectbox('Forecast Model:', ['Prophet', 'ARIMA','SARIMAX','Pre-trained Model'])
+    else:
+        st.warning("Please upload a CSV file to proceed.")
 
     if st.sidebar.button('Generate Forecast'):
         forecast_sales_and_quantities(weekly_sales, classification, item_description, colour_group, forecast_period, product_level, forecast_model)
