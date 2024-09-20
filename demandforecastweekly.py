@@ -63,7 +63,8 @@ def demand_app():
 
     # Function to clean numeric columns
     def clean_column(df, column):
-        df[column] = df[column].str.replace(',', '', regex=True).astype(float)
+        # df[column] = df[column].str.replace(',', '', regex=True).astype(float)
+        df[column] = df[column].astype(float)
 
     @st.cache_data
     # Function to load and preprocess data
