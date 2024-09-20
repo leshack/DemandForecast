@@ -4,7 +4,7 @@ from demandforecast import forecast_app
 from eda import eda_app
 from demandforecastweekly import demand_app 
 
-st.set_page_config(layout="wide", page_title="Demand Forecast and Data Analysis", page_icon="G:/My Drive/Kenpoly projects/Python Projects/Demand/logo.png")
+st.set_page_config(layout="wide", page_title="Demand Forecast and Data Analysis", page_icon="logo.png")
 
 app = MultiApp()
 
