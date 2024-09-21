@@ -9,9 +9,9 @@ st.set_page_config(layout="wide", page_title="Demand Forecast and Data Analysis"
 app = MultiApp()
 
 # Add all your application here
+app.add_app("Weekly Forecast", demand_app)
 app.add_app("Forecast", forecast_app)
 app.add_app("EDA", eda_app)
-app.add_app("Weekly Forecast", demand_app)
 
 # The main app
 app.run()

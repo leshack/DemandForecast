@@ -62,7 +62,8 @@ def forecast_app():
 
     # Function to clean numeric columns
     def clean_column(df, column):
-        df[column] = df[column].str.replace(',', '', regex=True).astype(float)
+        # df[column] = df[column].str.replace(',', '', regex=True).astype(float)
+        df[column] = df[column].astype(float)
 
 
     @st.cache_data
@@ -526,6 +527,38 @@ def forecast_app():
             st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
         elif forecast_model == 'SARIMAX':
+            st.header('SARIMAX Model')
+            st.markdown("""
+                The **[SARIMA](https://www.datacamp.com/tutorial/arima) (Seasonal AutoRegressive Integrated Moving Average)** model is an extension of ARIMA designed to handle seasonal patterns in time series data. It includes all the core components of ARIMA but adds a seasonal aspect to better capture recurring patterns over specific time intervals.
+
+                    SAR + I + MA  = SARIMA
+
+                - **Seasonal AutoRegressive (SAR)**: This component adds a seasonal autoregressive term that considers past values from the same season or period in previous cycles (e.g., weekly, monthly).
+                                
+                - **Seasonal Differencing (S)**: This part helps account for seasonality by differencing the data at the seasonal lag to make it stationary over longer-term periods.
+
+                - **Seasonal Moving Average (SMA)**: Captures the relationship between an observation and the residual errors from a moving average model, applied to past observations in the same season or period.
+
+                SARIMA is particularly useful when data exhibits **strong seasonal cycles** (such as monthly or yearly patterns) and can model both seasonality and trend simultaneously. This makes it ideal for forecasting sales or demand in businesses with clear seasonal demand spikes.
+
+                SARIMA’s ability to model seasonality allows it to complement other models like ARIMA or Prophet, providing more **accurate and refined forecasts** when seasonality plays a significant role in the data.
+                """)
+            st.markdown('### Sales forecast SKU vs Colour Wise')
+            st.markdown("""
+                In our **demand forecasting**, we focus on **SKUs** where **color** is a key attribute, reflecting our diverse range of 
+                plastic products. Since these products are classified as finished goods, accurately forecasting demand by color helps in 
+                optimizing **production and inventory management**.
+
+                Using SARIMA, we capture both the seasonal and non-seasonal components of sales data for each SKU. This model allows 
+                us to account for recurring patterns and trends, giving us a more comprehensive view of demand cycles. By identifying 
+                seasonal peaks and variations, we can better anticipate demand for specific colors, ensuring that our production schedules 
+                align with market needs while minimizing both overproduction and stockouts.
+            """)
+            st.markdown(f"""
+                The forecast graph, Sales Forecast for {item_description} {"(All Colors)" if product_level else f"({colour_group})"}, 
+                highlights predicted sales trends across different color variations. It provides valuable insights into how seasonal and 
+                non-seasonal demand patterns affect our products, helping us make more informed decisions about production and inventory levels.
+            """)
             order = (1, 1, 1)  # Define SARIMA order
             seasonal_order = (1, 1, 1, 12)  # Define seasonal SARIMA order, e.g., yearly seasonality
             forecast_sales_values = forecast_sarima(group_data['Value'], forecast_period, order, seasonal_order)
@@ -570,6 +603,23 @@ def forecast_app():
             plt.legend()
             st.pyplot(fig)
 
+            st.markdown('### Quantity forecast SKU vs Colour Wise')
+            st.markdown("""
+                Accurate forecasting of quantities is crucial for optimizing both **production and inventory management**. 
+                By predicting the quantity of products needed, we can ensure that our production aligns with market demand, 
+                reducing the risks of **overproduction** or stock shortages.
+
+                Using the SARIMA model, we account for both **seasonal** and **non-seasonal** factors in quantity forecasts. 
+                This allows us to anticipate cyclical changes in demand for different colors and SKUs, ensuring that production 
+                schedules and inventory levels are adjusted accordingly. Seasonal variations are particularly important when forecasting 
+                quantities, as they help us plan for peaks and troughs in demand.
+
+                This detailed forecasting approach helps the warehouse team manage **storage efficiently**, preventing excess inventory 
+                and reducing holding costs. By aligning production with seasonal demand patterns, SARIMA allows us to apply **lean 
+                manufacturing principles**, minimizing waste and ensuring that the right quantities are produced and stored at the 
+                right time.
+            """)
+
             # Plotting quantity forecast
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.plot(group_data['Month'], group_data['Quantity'], label='Actual Quantity', color='blue', marker="o")
@@ -597,6 +647,25 @@ def forecast_app():
             predicted_sales = forecast_sales['yhat'][:min_length]
             actual_Q = group_data['Quantity'][:min_lengthQ]
             predicted_Q = forecast_quantity['yhat'][:min_lengthQ]
+
+            st.markdown('### Production Comparison (Recommended vs Actual)')
+            st.markdown("""
+                We generate a downloadable data frame that can be directly integrated into the production schedule. 
+                This data frame includes the item description, color group, and the recommended production quantities 
+                for each week, based on SARIMA's predictions. These forecasts are essential for providing the production 
+                team with precise guidance on expected demand, accounting for both seasonal and non-seasonal variations in 
+                demand for each SKU and color variation.
+
+                Additionally, the actual quantities sold from previous months on a weekly basis are included, allowing for 
+                a direct comparison between historical sales and the recommended production for upcoming weeks. This 
+                comparison helps to ensure that production remains aligned with demand patterns, reducing the risk of overproduction 
+                or stock shortages while improving overall efficiency.
+
+                The production team can use this data to adjust manufacturing output accordingly, while the warehouse team 
+                can optimize storage and logistics planning based on forecasted quantities. This integrated approach improves 
+                operations and ensures that resources are allocated effectively throughout the supply chain.
+            """)
+
 
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
