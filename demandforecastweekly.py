@@ -1171,6 +1171,15 @@ def demand_app():
             plt.legend()
             st.pyplot(fig)
 
+            min_length = min(len(overall_data['Value']), len(forecast_sales['yhat']))
+            min_lengthQ = min(len(overall_data['Quantity']), len(forecast_quantity['yhat']))
+
+            # Adjust both arrays to the same length
+            actual_sales = overall_data['Value'][:min_length]
+            predicted_sales = forecast_sales['yhat'][:min_length]
+            actual_Q = overall_data['Value'][:min_lengthQ]
+            predicted_Q = forecast_quantity['yhat'][:min_lengthQ]
+
             st.markdown('### **Model Evaluation:**')
             st.markdown("""
             To ensure the effectiveness of our forecasting, we evaluate the performance of each model using key metrics such as 
