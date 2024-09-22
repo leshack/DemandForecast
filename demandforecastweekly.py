@@ -753,8 +753,8 @@ def demand_app():
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
             mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
             
         # elif forecast_model == 'Pre-trained Model':
@@ -1056,8 +1056,8 @@ def demand_app():
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
             mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
         
         elif forecast_model == 'SARIMAX':
 
@@ -1180,6 +1180,12 @@ def demand_app():
             to refine our forecasting approach, improve accuracy, and make data-driven decisions to enhance overall business 
             performance.
             """)
+
+            # Calculate metrics
+            mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
+            mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
         # elif forecast_model == 'Pre-trained Model':
             

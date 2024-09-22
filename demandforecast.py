@@ -153,7 +153,7 @@ def forecast_app():
                 [Prophet](https://towardsdatascience.com/time-series-from-scratch-decomposing-time-series-data-7b7ad0c30fe7) is a powerful open-source tool developed by **Facebook** for [time series forecasting](https://towardsdatascience.com/time-series-from-scratch-decomposing-time-series-data-7b7ad0c30fe7). It is designed to handle 
                 various patterns in data, such as **seasonality, holidays, and trends**, making it ideal for business forecasting. 
                 Prophet works by decomposing the time series into trend, seasonality, and holiday components, allowing for robust
-                predictions even when data is irregular or contains missing points. With its ability to capture daily, weekly, or
+                predictions even when data is irregular or contains missing points. With its ability to capture daily, monthly, or
                 yearly seasonality, Prophet is highly versatile and provides accurate, reliable forecasts for **business insights and 
                 decision-making**.
                 """)
@@ -261,7 +261,7 @@ def forecast_app():
                     for each month, which are crucial for advising the production team. The forecasted quantities are based 
                     on Prophet's predictions, giving us a clear view of expected demand for each SKU and color variation.
 
-                    In addition, the actual quantities sold for previous months on weekly are included, allowing for a 
+                    In addition, the actual quantities sold for previous months on monthly are included, allowing for a 
                     direct comparison between what was sold and what is recommended for the coming weeks. This 
                     comparison ensures that production stays aligned with demand and prevents overproduction or 
                     underproduction, making the process more efficient.
@@ -305,8 +305,8 @@ def forecast_app():
             mae_sales, rmse_sales = calculate_metrics(group_data['Value'], forecast_sales['yhat'][:len(group_data)])
             mae_quantity, rmse_quantity = calculate_metrics(group_data['Quantity'], forecast_quantity['yhat'][:len(group_data)])
             
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
             st.toast('Prophet forecast successfully generated!')
 
@@ -471,7 +471,7 @@ def forecast_app():
                 for each month, based on ARIMA’s predictions. These forecasts are essential for providing the production 
                 team with clear guidance on expected demand for each SKU and color variation.
 
-                In addition, the actual quantities sold from previous months on a weekly basis are included, allowing for 
+                In addition, the actual quantities sold from previous months on a monthly basis are included, allowing for 
                 a direct comparison between historical sales and the recommended production for upcoming weeks. This 
                 comparison ensures that production remains closely aligned with demand, preventing overproduction or 
                 shortages and improving overall efficiency.
@@ -523,8 +523,8 @@ def forecast_app():
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
             mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
         elif forecast_model == 'SARIMAX':
             st.header('SARIMAX Model')
@@ -533,7 +533,7 @@ def forecast_app():
 
                     SAR + I + MA  = SARIMA
 
-                - **Seasonal AutoRegressive (SAR)**: This component adds a seasonal autoregressive term that considers past values from the same season or period in previous cycles (e.g., weekly, monthly).
+                - **Seasonal AutoRegressive (SAR)**: This component adds a seasonal autoregressive term that considers past values from the same season or period in previous cycles (e.g., monthly, monthly).
                                 
                 - **Seasonal Differencing (S)**: This part helps account for seasonality by differencing the data at the seasonal lag to make it stationary over longer-term periods.
 
@@ -634,10 +634,60 @@ def forecast_app():
             plt.legend()
             st.pyplot(fig)
 
-            # Production recommendation
-            production_recommendation = forecast_quantity[['ds', 'yhat']].rename(columns={'yhat': 'Recommended Production'})
-            st.write('Recommended Production Quantities:')
-            st.dataframe(production_recommendation)
+            # Determine the colour group value based on product_level
+            display_colour_group = "(All Colors)" if product_level else f"({colour_group})"
+
+            # Convert 'ds' (the date column) to the year and month number
+            production_recommendation = forecast_quantity_continuous[['ds', 'yhat']].copy()
+            # Extract Year and Month Number from the 'ds' column
+            production_recommendation['Year'] = production_recommendation['ds'].dt.year
+            production_recommendation['Month Number'] = production_recommendation['ds'].dt.month
+            # Add item description and colour group to production recommendation
+            production_recommendation['Item Description'] = item_description
+            production_recommendation['Colour Group'] = display_colour_group
+            # Rename the 'yhat' column to 'Recommended Production'
+            production_recommendation = production_recommendation.rename(columns={'yhat': 'Recommended Production'})
+            # Drop the 'ds' column (optional, if you only want the year and month number and not the date)
+            production_recommendation = production_recommendation.drop(columns=['ds'])
+
+            # Actual production data processing
+            actual_production = group_data[['Month', 'Quantity']].rename(columns={'Month': 'ds', 'Quantity': 'y'})
+            actual_production['Year'] = actual_production['ds'].dt.year
+            actual_production['Month Number'] = actual_production['ds'].dt.month
+            # Add item description and colour group to actual production
+            actual_production['Item Description'] = item_description
+            actual_production['Colour Group'] = display_colour_group
+            # Rename the 'y' column to 'Actual Quantities Sold'
+            actual_production = actual_production.rename(columns={'y': 'Actual Quantities Sold'})
+            # Drop the 'ds' column (optional, if you only want the year and month number and not the date)
+            actual_production = actual_production.drop(columns=['ds'])
+
+             # Merge production recommendation and actual production data based on Year and month Number
+            production_comparison = pd.merge(
+            production_recommendation, 
+            actual_production[['Year', 'Month Number', 'Actual Quantities Sold', 'Item Description', 'Colour Group']], 
+            on=['Year', 'Month Number', 'Item Description', 'Colour Group'], 
+            how='left'
+               )
+            
+            st.markdown('### Production Comparison (Recommended vs Actual)')
+            st.markdown("""
+                We generate a downloadable data frame that can be directly integrated into the production schedule. 
+                This data frame includes the item description, color group, and the recommended production quantities 
+                for each week, based on SARIMA's predictions. These forecasts are essential for providing the production 
+                team with precise guidance on expected demand, accounting for both seasonal and non-seasonal variations in 
+                demand for each SKU and color variation.
+
+                Additionally, the actual quantities sold from previous months on a monthly basis are included, allowing for 
+                a direct comparison between historical sales and the recommended production for upcoming weeks. This 
+                comparison helps to ensure that production remains aligned with demand patterns, reducing the risk of overproduction 
+                or stock shortages while improving overall efficiency.
+
+                The production team can use this data to adjust manufacturing output accordingly, while the warehouse team 
+                can optimize storage and logistics planning based on forecasted quantities. This integrated approach improves 
+                operations and ensures that resources are allocated effectively throughout the supply chain.
+            """)
+            st.dataframe(production_comparison)
 
             min_length = min(len(group_data['Value']), len(forecast_sales['yhat']))
             min_lengthQ = min(len(group_data['Quantity']), len(forecast_quantity['yhat']))
@@ -648,30 +698,39 @@ def forecast_app():
             actual_Q = group_data['Quantity'][:min_lengthQ]
             predicted_Q = forecast_quantity['yhat'][:min_lengthQ]
 
-            st.markdown('### Production Comparison (Recommended vs Actual)')
+            st.markdown('### Model Evaluation and Performance')
             st.markdown("""
-                We generate a downloadable data frame that can be directly integrated into the production schedule. 
-                This data frame includes the item description, color group, and the recommended production quantities 
-                for each week, based on SARIMA's predictions. These forecasts are essential for providing the production 
-                team with precise guidance on expected demand, accounting for both seasonal and non-seasonal variations in 
-                demand for each SKU and color variation.
+                    In our forecasting model, we evaluate performance using two key metrics: **MAE (Mean Absolute Error)** 
+                    and **RMSE (Root Mean Squared Error)**, both for sales and quantities.
 
-                Additionally, the actual quantities sold from previous months on a weekly basis are included, allowing for 
-                a direct comparison between historical sales and the recommended production for upcoming weeks. This 
-                comparison helps to ensure that production remains aligned with demand patterns, reducing the risk of overproduction 
-                or stock shortages while improving overall efficiency.
+                    - **Sales MAE**: This measures the average magnitude of the errors in our sales forecasts, 
+                    without considering their direction. It tells us, on average, how much the forecasted sales 
+                    values deviate from the actual sales values. A lower Sales MAE indicates that our model 
+                    is making more accurate predictions of total revenue.
 
-                The production team can use this data to adjust manufacturing output accordingly, while the warehouse team 
-                can optimize storage and logistics planning based on forecasted quantities. This integrated approach improves 
-                operations and ensures that resources are allocated effectively throughout the supply chain.
-            """)
+                    - **Quantity MAE**: Similar to Sales MAE, this metric focuses on the accuracy of quantity 
+                    predictions. It reflects how closely our forecasted quantities match the actual number 
+                    of units sold. This is critical for ensuring accurate production planning.
 
+                    - **Sales RMSE**: RMSE gives more weight to larger errors by squaring the differences between 
+                    forecasted and actual sales values. This metric is useful when we want to penalize 
+                    large deviations, providing a sense of how well the model performs when there are significant 
+                    errors in sales forecasting.
 
+                    - **Quantity RMSE**: Like Sales RMSE, this focuses on the forecasted quantities but penalizes 
+                    larger errors more heavily. It's essential for understanding how far off our forecasts are 
+                    when there's a significant mismatch between predicted and actual quantities, helping us 
+                    refine production schedules more effectively.
+
+                    Both MAE and RMSE are used together to provide a balanced view of model performance, with MAE 
+                    giving an overall sense of average error, while RMSE highlights how well the model handles 
+                    larger errors.
+                    """)
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
             mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
             
         # elif forecast_model == 'Pre-trained Model':
@@ -754,7 +813,7 @@ def forecast_app():
             st.markdown("""
                 After applying our forecasting models, we analyze the projected overall sales for each month. This aggregated 
                 sales data provides a comprehensive view of the expected revenue, allowing us to assess financial performance
-                 and plan for future growth. By understanding weekly sales trends, we can make informed decisions about budgeting, 
+                 and plan for future growth. By understanding monthly sales trends, we can make informed decisions about budgeting, 
                 investment, and resource allocation. Accurate sales forecasts are crucial for aligning marketing strategies and 
                 meeting revenue targets effectively.
                 """)
@@ -844,8 +903,8 @@ def forecast_app():
             performance.
             """)
             
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
         
         elif forecast_model == 'ARIMA':
             forecast_sales_values = forecast_arima(overall_data['Value'], forecast_period)
@@ -879,7 +938,7 @@ def forecast_app():
             st.markdown("""
                 After applying our forecasting models, we analyze the projected overall sales for each month. This aggregated 
                 sales data provides a comprehensive view of the expected revenue, allowing us to assess financial performance
-                 and plan for future growth. By understanding weekly sales trends, we can make informed decisions about budgeting, 
+                 and plan for future growth. By understanding monthly sales trends, we can make informed decisions about budgeting, 
                 investment, and resource allocation. Accurate sales forecasts are crucial for aligning marketing strategies and 
                 meeting revenue targets effectively.
                 """)
@@ -974,8 +1033,8 @@ def forecast_app():
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
             mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
         elif forecast_model == 'SARIMAX':
             order = (1, 1, 1)  # Define SARIMA order
@@ -1011,6 +1070,18 @@ def forecast_app():
             forecast_sales_continuous = pd.concat([last_actual_sales, forecast_sales], ignore_index=True)
             forecast_quantity_continuous = pd.concat([last_actual_quantity, forecast_quantity], ignore_index=True)
 
+            st.markdown('### **Overall Monthly Sales Forecast**')
+            st.markdown("""
+                After applying the SARIMA model, we analyze the projected overall sales for each week. This aggregated forecast 
+                captures both seasonal and non-seasonal patterns, providing a detailed view of expected sales performance. By accounting 
+                for cyclical demand fluctuations, we gain deeper insights into how different weeks are likely to perform in terms of revenue.
+
+                This comprehensive outlook allows us to make informed decisions about budgeting, marketing strategies, and resource 
+                allocation. Understanding these monthly sales trends helps us plan for future growth while ensuring that our production 
+                schedules and inventory management align with market demand. Accurate sales forecasts are essential for achieving 
+                revenue targets and maintaining financial stability.
+            """)
+
             # Plot overall sales forecast
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.plot(overall_data['Month'], overall_data['Value'], label='Actual Sales', color='blue', marker="o")
@@ -1024,6 +1095,46 @@ def forecast_app():
             plt.tight_layout()
             plt.legend()
             st.pyplot(fig)
+
+            actual_recommendation = forecast_sales_continuous[['ds', 'yhat']].copy()
+            
+            # Extract Year and month Number from the 'ds' column
+            actual_recommendation['Year'] =  actual_recommendation['ds'].dt.year
+            actual_recommendation['Month Number'] =  actual_recommendation['ds'].dt.month 
+            # Rename the 'yhat' column to 'Recommended Production'
+            actual_recommendation =  actual_recommendation.rename(columns={'yhat': 'Forecast Sales'})
+            # Drop the 'ds' column (optional, if you only want the month number and not the date)
+            actual_recommendation =  actual_recommendation.drop(columns=['ds'])
+
+            actual_sale = overall_data[['Month', 'Value']].rename(columns={'Month': 'ds', 'Value': 'y'})
+            actual_sale['Year'] = actual_sale['ds'].dt.year
+            actual_sale['Month Number'] = actual_sale['ds'].dt.month
+            
+            # Rename the 'yhat' column to 'Recommended Production'
+            actual_sale = actual_sale.rename(columns={'y': 'Actual realized Sales'})
+            # Drop the 'ds' column (optional, if you only want the month number and not the date)
+            actual_sale = actual_sale.drop(columns=['ds'])
+
+            # Merge production recommendation and actual production data based on Year and month Number
+            production_comparison = pd.merge(
+            actual_recommendation, 
+            actual_sale[['Year', 'Month Number', 'Actual realized Sales']], 
+            on=['Year', 'Month Number'], 
+            how='left'
+               )
+            st.dataframe(production_comparison)
+
+            st.markdown('### **Overall Monthly Quantities Forecast**')
+            st.markdown("""
+                In addition to sales, we use the SARIMA model to forecast the quantities of products required for each week. This forecast 
+                accounts for both seasonal trends and fluctuations in demand, helping us determine the exact number of units needed 
+                to meet anticipated market requirements.
+
+                Accurate quantity forecasts are critical for optimizing production schedules and managing inventory levels. By predicting 
+                monthly quantities, we can ensure that production aligns with demand, preventing both stockouts and overstock situations. 
+                This allows us to meet customer needs efficiently while minimizing waste and reducing carrying costs, ultimately supporting 
+                lean production and improving overall operational efficiency.
+            """)
 
             # Plot overall quantity forecast
             fig, ax = plt.subplots(figsize=(10, 6)) 
@@ -1039,25 +1150,21 @@ def forecast_app():
             plt.legend()
             st.pyplot(fig)
 
-            # Production recommendation
-            production_recommendation = forecast_quantity[['ds', 'yhat']].rename(columns={'yhat': 'Recommended Production'})
-            st.write('Recommended Production Quantities:')
-            st.dataframe(production_recommendation)
-
-            # Align actual and predicted lengths for sales and quantity
-            min_length = min(len(overall_data['Value']), len(forecast_sales['yhat']))
-            min_lengthQ = min(len(overall_data['Quantity']), len(forecast_quantity['yhat']))
-
-            actual_sales = overall_data['Value'][:min_length]
-            predicted_sales = forecast_sales['yhat'][:min_length]
-            actual_Q = overall_data['Quantity'][:min_lengthQ]
-            predicted_Q = forecast_quantity['yhat'][:min_lengthQ]
+            st.markdown('### **Model Evaluation:**')
+            st.markdown("""
+            To ensure the effectiveness of our forecasting, we evaluate the performance of each model using key metrics such as 
+            MAE (Mean Absolute Error) and RMSE (Root Mean Squared Error). These metrics help us assess how well each model
+            predicts both sales and quantities. By comparing the forecast accuracy of Prophet, ARIMA, the pre-trained ARIMA 
+            model, and SARIMA, we can determine which model provides the most reliable forecasts. This evaluation allows us
+            to refine our forecasting approach, improve accuracy, and make data-driven decisions to enhance overall business 
+            performance.
+            """)
 
             # Calculate metrics
             mae_sales, rmse_sales = calculate_metrics(actual_sales, predicted_sales)
             mae_quantity, rmse_quantity = calculate_metrics(actual_Q, predicted_Q)
-            st.write(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
-            st.write(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
+            st.markdown(f'Sales MAE: {mae_sales}, Sales RMSE: {rmse_sales}')
+            st.markdown(f'Quantity MAE: {mae_quantity}, Quantity RMSE: {rmse_quantity}')
 
         # elif forecast_model == 'Pre-trained Model':
             
@@ -1114,13 +1221,13 @@ def forecast_app():
     csv_path = st.sidebar.file_uploader("Upload your CSV file", type="csv")
     if csv_path is not None:
         df = load_and_preprocess_data(csv_path)
-        monthly_sales = aggregate_data(df)
 
-        
+
+        monthly_sales = aggregate_data(df)
         st.header('Aggregation to Monthly')
         st.markdown("""
                 To improve forecasting accuracy, we've aggregated the sales data on a Monthly basis. By doing this, we smooth out daily 
-                fluctuations and capture consistent buying patterns that are more relevant to planning and decision-making. Weekly
+                fluctuations and capture consistent buying patterns that are more relevant to planning and decision-making. Monthly
                 aggregation also allows for better trend identification and seasonality analysis, which are crucial for generating 
                 reliable demand forecasts. This approach ensures we make data-driven predictions that align with real-world sales cycles 
                 and customer behaviors.
